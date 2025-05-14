@@ -1,0 +1,44 @@
+name: Build Windows exe
+
+on:
+  push:                     # запускается на каждый push в любую ветку
+  workflow_dispatch:        # и вручную из вкладки Actions
+
+jobs:
+  build-win:
+    runs-on: windows-latest # Windows 11 VM (нужна для squirrel-setup.exe)
+
+    steps:
+    #--- 1. Клонируем ваш репозиторий ---#
+    - name: Checkout repo
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 1
+
+    #--- 2. Устанавливаем Node LTS и кэшируем npm-папку ---#
+    - name: Set up Node
+      uses: actions/setup-node@v4
+      with:
+        node-version: 20
+        cache: "npm"
+
+    #--- 3. Ставим зависимости (быстрее чем npm install) ---#
+    - name: Install deps
+      run: npm ci --ignore-scripts
+
+    #--- 4. Собираем установщик через Electron-Forge ---#
+    - name: Build installer
+      run: npm run make
+      env:
+        # Electron-Forge под Windows иногда просит токен,
+        # встроенный секрет GitHub подойдёт
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    #--- 5. Загружаем результат в Artifacts ---#
+    - name: Upload exe
+      uses: actions/upload-artifact@v4
+      with:
+        name: PlanHub_Scraper_Setup
+        path: |
+          out/**/Setup.exe
+          out/**/PlanHub*.exe

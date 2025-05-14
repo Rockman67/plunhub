@@ -1,0 +1,29 @@
+{
+  "planhub": {
+    "name"          : "div[qa-locator^=\"lead-list-go-to-details\"] > span",
+    "date"          : "div.due-date.lead-info span",
+
+    "city"          : ".project__title, .details-overview .address div:nth-child(2)",
+    "state"         : ".project__title, .details-overview .address div:nth-child(2)",
+
+    "tradeCategory" : "planhub-csi-chip, mat-chip.csi-chip",
+    "csiCode"       : "planhub-csi-chip, mat-chip.csi-chip"
+  },
+
+  "bc_list": {
+    "project_click" : "a[class^=\"nameCell-\"]",
+    "name"          : "a[class^=\"nameCell-\"] div[class^=\"projectName-\"] div[class^=\"textWrapper-\"]",
+    "date"          : "div[class*=\"two-row-cell__FirstRowContent\"] div[class^=\"textWrapper-\"]"
+  },
+
+  "bc_contact": {
+    "open_modal" : "div[class^=\"leadDetailsText-\"] span[class^=\"clickable-\"]",
+    "name"       : "[data-id=\"title-company-name\"]",
+    "email"      : "a[href^=\"mailto:\"]"
+  },
+
+  "bc_details": {
+    "project_name" : "h1[class^=\"projectName-\"]",
+    "date"         : "div[class^=\"date-\"]"
+  }
+}

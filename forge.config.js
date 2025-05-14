@@ -6,7 +6,7 @@ const fs              = require('fs-extra');
 const { FusesPlugin } = require('@electron-forge/plugin-fuses');
 const { FuseV1Options, FuseVersion } = require('@electron/fuses');
 
-/** куда складывать сборку */
+/** куда складываем сборку */
 const OUT_DIR = 'C:/builds/electron';
 
 module.exports = {
@@ -49,13 +49,12 @@ module.exports = {
   makers: [
     /* Windows-инсталлятор */
     {
-      name      : '@electron-forge/maker-squirrel',
-      platforms : [ 'win32' ],       // гарантируем запуск на runner'е Windows
-      config    : {
+      name : '@electron-forge/maker-squirrel',
+      config: {            // минимальная конфигурация для Squirrel
         name: 'planhub_scraper'
       }
     },
-    /* архив для macOS — пригодится позже, не мешает */
+    /* архив для macOS — оставляем, вдруг пригодится */
     { name: '@electron-forge/maker-zip',  platforms: ['darwin'] },
     { name: '@electron-forge/maker-deb',  config: {} },
     { name: '@electron-forge/maker-rpm',  config: {} }

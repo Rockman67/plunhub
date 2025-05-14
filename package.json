@@ -5,7 +5,8 @@
   "description": "One-click desktop tool that scrapes PlanHub and saves a CSV",
   "private": true,
 
-  "main": ".webpack/main",              //  ← БЕЗ index.js
+  
+  "main": ".webpack/main",
 
   "workspaces": ["renderer"],
 

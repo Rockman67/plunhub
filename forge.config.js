@@ -6,13 +6,10 @@ const fs              = require('fs-extra');
 const { FusesPlugin } = require('@electron-forge/plugin-fuses');
 const { FuseV1Options, FuseVersion } = require('@electron/fuses');
 
-/** куда складываем сборку */
-const OUT_DIR = 'C:/builds/electron';
-
+/* ---------- конфигурация ---------- */
 module.exports = {
   /* ---------- packager ---------- */
   packagerConfig: {
-    out  : OUT_DIR,
     prune: false,
     asar : {
       unpackDir:
@@ -47,17 +44,14 @@ module.exports = {
 
   /* ---------- makers ---------- */
   makers: [
-    /* Windows-инсталлятор */
     {
+      /* Windows-инсталлятор (Squirrel) */
       name : '@electron-forge/maker-squirrel',
-      config: {            // минимальная конфигурация для Squirrel
-        name: 'planhub_scraper'
-      }
+      config: { name: 'planhub_scraper' }
     },
-    /* архив для macOS — оставляем, вдруг пригодится */
-    { name: '@electron-forge/maker-zip',  platforms: ['darwin'] },
-    { name: '@electron-forge/maker-deb',  config: {} },
-    { name: '@electron-forge/maker-rpm',  config: {} }
+    { name: '@electron-forge/maker-zip', platforms: ['darwin'] },
+    { name: '@electron-forge/maker-deb', config: {} },
+    { name: '@electron-forge/maker-rpm', config: {} }
   ],
 
   /* ---------- plugins ---------- */
@@ -65,8 +59,7 @@ module.exports = {
     {
       name  : '@electron-forge/plugin-webpack',
       config: {
-        packagerConfig: { out: OUT_DIR },
-
+        /* packagerConfig.out НЕ задаём — берём дефолтный out/ */
         mainConfig: path.resolve(__dirname, 'webpack.main.config.js'),
         renderer  : {
           config: path.resolve(__dirname, 'webpack.renderer.config.js'),
@@ -107,5 +100,3 @@ module.exports = {
     })
   ]
 };
-
-console.log('⚙️  packagerConfig.out =', OUT_DIR);

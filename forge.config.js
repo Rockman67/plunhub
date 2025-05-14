@@ -6,23 +6,19 @@ const fs              = require('fs-extra');
 const { FusesPlugin } = require('@electron-forge/plugin-fuses');
 const { FuseV1Options, FuseVersion } = require('@electron/fuses');
 
-/* Каталог, куда Forge кладёт .exe / .zip и т.п. */
-const OUT_DIR = path.resolve('C:/builds/electron');
+/** куда складывать сборку */
+const OUT_DIR = 'C:/builds/electron';
 
 module.exports = {
   /* ---------- packager ---------- */
   packagerConfig: {
-    out  : OUT_DIR,       // ← один-единственный источник правды
+    out  : OUT_DIR,
     prune: false,
-
-    /* Chrome + puppeteer лежат вне asar, чтобы могли писать профили */
     asar : {
       unpackDir:
         'node_modules/{puppeteer,puppeteer-core,puppeteer-extra,' +
         'puppeteer-extra-plugin-*,fs-extra}/**'
     },
-
-    /* afterCopy копирует нужные модули рядом с приложением */
     afterCopy: [
       async (buildPath) => {
         const deps = [
@@ -33,17 +29,15 @@ module.exports = {
           'puppeteer-extra-plugin-recaptcha',
           'fs-extra'
         ];
-
         for (const dep of deps) {
           const src = path.join(__dirname, 'node_modules', dep);
           const dst = path.join(buildPath,  'node_modules', dep);
-
           console.log(`[afterCopy] → ${dep}`);
           await fs.copy(src, dst, {
             recursive: true,
             filter: (p) =>
-              !/[/\\]local-chromium[/\\]/i.test(p) &&  // не тащим Chromium
-              !/[/\\]\.cache[/\\]/i.test(p)            // и кэши
+              !/[/\\]local-chromium[/\\]/i.test(p) &&
+              !/[/\\]\.cache[/\\]/i.test(p)
           });
         }
         console.log('[afterCopy] ✓ modules copied');
@@ -51,12 +45,20 @@ module.exports = {
     ]
   },
 
-  /* ---------- makers (важно для .exe) ---------- */
+  /* ---------- makers ---------- */
   makers: [
-    { name: '@electron-forge/maker-squirrel', config: {} }, // ← Windows installer
-    { name: '@electron-forge/maker-zip',      platforms: ['darwin'] },
-    { name: '@electron-forge/maker-deb',      config: {} },
-    { name: '@electron-forge/maker-rpm',      config: {} }
+    /* Windows-инсталлятор */
+    {
+      name      : '@electron-forge/maker-squirrel',
+      platforms : [ 'win32' ],       // гарантируем запуск на runner'е Windows
+      config    : {
+        name: 'planhub_scraper'
+      }
+    },
+    /* архив для macOS — пригодится позже, не мешает */
+    { name: '@electron-forge/maker-zip',  platforms: ['darwin'] },
+    { name: '@electron-forge/maker-deb',  config: {} },
+    { name: '@electron-forge/maker-rpm',  config: {} }
   ],
 
   /* ---------- plugins ---------- */
@@ -64,7 +66,8 @@ module.exports = {
     {
       name  : '@electron-forge/plugin-webpack',
       config: {
-        /* webpack конфиги */
+        packagerConfig: { out: OUT_DIR },
+
         mainConfig: path.resolve(__dirname, 'webpack.main.config.js'),
         renderer  : {
           config: path.resolve(__dirname, 'webpack.renderer.config.js'),
@@ -79,7 +82,6 @@ module.exports = {
           devServer: { enabled: true, port: 5173 }
         },
 
-        /* модули, которые НЕ должны упаковываться в asar */
         externals: {
           main: [
             'puppeteer',
@@ -97,7 +99,6 @@ module.exports = {
       }
     },
 
-    /* ---------- Electron Fuses ---------- */
     new FusesPlugin({
       version: FuseVersion.V1,
       [FuseV1Options.RunAsNode]                            : false,

@@ -11,34 +11,49 @@ jobs:
     runs-on: windows-2022
 
     steps:
-      - name: Checkout
+      # 1 ▸ исходники
+      - name: Checkout repo
         uses: actions/checkout@v4
         with:
           fetch-depth: 1
 
+      # 2 ▸ Node + npm-кеш
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: npm
 
-      - name: Install deps (clean)
+      # 3 ▸ Папка, куда Electron-packager будет писать (совпадает с forge.config.js)
+      - name: Ensure build directory exists
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path 'C:\builds\electron'
+
+      # 4 ▸ Установка зависимостей без запуска post-install-скриптов
+      - name: Install dependencies (clean)
         run: npm ci --ignore-scripts
 
+      # 5 ▸ Сборка install-пакета
       - name: Make Windows installer
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: npm run make
 
-      # ▸▸ вместо cmd/dir используем PowerShell-листинг
+      # 6 ▸ Дерево результатов (не ломаем workflow, если каталога нет)
       - name: Show build folder tree
         shell: pwsh
+        continue-on-error: true
         run: |
-          Get-ChildItem 'C:\builds\electron' -Recurse |
-          Select-Object FullName
+          if (Test-Path 'C:\builds\electron') {
+            Get-ChildItem 'C:\builds\electron' -Recurse | Select-Object FullName
+          } else {
+            Write-Warning '⚠️  C:\builds\electron not found'
+          }
 
-      # ▸▸ выгружаем всё, что появилось в C:\builds\electron
+      # 7 ▸ Загрузка артефактов (если каталог существует)
       - name: Upload artefacts
+        if: exists('C:\\builds\\electron')
         uses: actions/upload-artifact@v4
         with:
           name: planhub_build_win

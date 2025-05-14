@@ -1,0 +1,58 @@
+{
+  "name": "planhub_gui",
+  "productName": "PlanHub Scraper",
+  "version": "1.0.0",
+  "description": "One-click desktop tool that scrapes PlanHub and saves a CSV",
+  "private": true,
+
+  "main": ".webpack/main",              //  ← БЕЗ index.js
+
+  "workspaces": ["renderer"],
+
+  "scripts": {
+    "start":   "electron-forge start",
+    "package": "electron-forge package",
+    "make":    "electron-forge make",
+    "publish": "electron-forge publish",
+    "dev":     "npm run dev -w renderer",
+    "build":   "npm run build -w renderer",
+    "lint":    "echo \"no lint yet\""
+  },
+
+  "author": "Rockman67 <a.s.boltenkov.vst@gmail.com>",
+  "license": "MIT",
+
+  "dependencies": {
+    "csv-writer": "^1.6.0",
+    "dotenv": "^16.5.0",
+    "electron-squirrel-startup": "^1.0.1",
+    "fs-extra": "^11.3.0",
+    "puppeteer": "^24.8.2",
+    "puppeteer-core": "^24.8.2",
+    "puppeteer-extra": "^3.3.6",
+    "puppeteer-extra-plugin-recaptcha": "^3.6.8",
+    "puppeteer-extra-plugin-stealth": "^2.11.2"
+  },
+
+  "devDependencies": {
+    "@babel/core": "^7.27.1",
+    "@babel/preset-env": "^7.27.2",
+    "@babel/preset-react": "^7.27.1",
+    "@electron-forge/cli": "^7.8.1",
+    "@electron-forge/maker-deb": "^7.8.1",
+    "@electron-forge/maker-rpm": "^7.8.1",
+    "@electron-forge/maker-squirrel": "^7.8.1",
+    "@electron-forge/maker-zip": "^7.8.1",
+    "@electron-forge/plugin-auto-unpack-natives": "^7.8.1",
+    "@electron-forge/plugin-fuses": "^7.8.1",
+    "@electron-forge/plugin-webpack": "^7.8.1",
+    "@electron/fuses": "^1.8.0",
+    "@vercel/webpack-asset-relocator-loader": "^1.7.3",
+    "babel-loader": "^10.0.0",
+    "concurrently": "^9.1.2",
+    "css-loader": "^6.11.0",
+    "electron": "36.2.0",
+    "node-loader": "^2.1.0",
+    "style-loader": "^3.3.4"
+  }
+}

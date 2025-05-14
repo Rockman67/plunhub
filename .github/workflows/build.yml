@@ -24,36 +24,30 @@ jobs:
           node-version: 20
           cache: npm
 
-      # 3 ▸ Каталог, куда Electron-Forge кладёт билд
-      - name: Ensure build directory exists
-        shell: pwsh
-        run: New-Item -ItemType Directory -Force -Path 'C:\builds\electron'
-
-      # 4 ▸ Установка зависимостей (чисто, без post-install-скриптов)
-      - name: Install dependencies (clean)
+      # 3 ▸ Установка зависимостей (чисто, без post-install)
+      - name: Install dependencies
         run: npm ci --ignore-scripts
 
-      # 5 ▸ Сборка установщика
+      # 4 ▸ Сборка (Electron-Forge → Squirrel-установщик)
       - name: Make Windows installer
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: npm run make
 
-      # 6 ▸ Показать дерево результатов (не ломаем workflow, если каталога нет)
-      - name: Show build folder tree
+      # 5 ▸ Показать структуру каталога out/make
+      - name: Show make folder tree
         shell: pwsh
-        continue-on-error: true
         run: |
-          if (Test-Path 'C:\builds\electron') {
-            Get-ChildItem 'C:\builds\electron' -Recurse | Select-Object FullName
+          if (Test-Path '.\out\make') {
+            Get-ChildItem '.\out\make' -Recurse | Select-Object FullName
           } else {
-            Write-Warning '⚠️  C:\builds\electron not found'
+            Write-Warning '⚠️  .\out\make not found'
           }
 
-      # 7 ▸ Загрузка артефактов
+      # 6 ▸ Загрузка артефактов
       - name: Upload artefacts
         uses: actions/upload-artifact@v4
         with:
           name: planhub_build_win
-          path: 'C:\builds\electron\**\*'
+          path: out/make/**/*
           if-no-files-found: error

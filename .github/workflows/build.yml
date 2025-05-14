@@ -1,44 +1,47 @@
+# .github/workflows/build.yml
 name: Build Windows exe
 
 on:
-  push:                     # запускается на каждый push в любую ветку
-  workflow_dispatch:        # и вручную из вкладки Actions
+  push:               # автоматически на каждый push в любую ветку
+  workflow_dispatch:  # и вручную из вкладки «Actions»
 
 jobs:
   build-win:
-    runs-on: windows-latest # Windows 11 VM (нужна для squirrel-setup.exe)
+    runs-on: windows-latest        # Windows Server 2022 (достаточно для Squirrel)
 
     steps:
-    #--- 1. Клонируем ваш репозиторий ---#
-    - name: Checkout repo
-      uses: actions/checkout@v4
-      with:
-        fetch-depth: 1
+      # --- 1. Клонируем репозиторий ---
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1           # полный clone не нужен
 
-    #--- 2. Устанавливаем Node LTS и кэшируем npm-папку ---#
-    - name: Set up Node
-      uses: actions/setup-node@v4
-      with:
-        node-version: 20
-        cache: "npm"
+      # --- 2. Устанавливаем Node + кэшируем npm ---
+      - name: Set up Node 20 (LTS)
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm               # кеширует C:\npm\cache
 
-    #--- 3. Ставим зависимости (быстрее чем npm install) ---#
-    - name: Install deps
-      run: npm ci --ignore-scripts
+      # --- 3. Устанавливаем зависимости ---
+      # npm ci = чистая установка по package-lock.json, быстрее и надёжнее, чем npm i
+      - name: Install dependencies
+        run: npm ci --ignore-scripts
 
-    #--- 4. Собираем установщик через Electron-Forge ---#
-    - name: Build installer
-      run: npm run make
-      env:
-        # Electron-Forge под Windows иногда просит токен,
-        # встроенный секрет GitHub подойдёт
-        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # --- 4. Собираем инсталлятор через Electron-Forge ---
+      # if-statement пропускает шаг, когда нет папки makers/squirrel
+      - name: Build installer (Electron-Forge make)
+        run: npm run make
+        env:
+          # GH_TOKEN нужен Squirrel-maker'у для подписи/публикации — встроенный токен подойдёт
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-    #--- 5. Загружаем результат в Artifacts ---#
-    - name: Upload exe
-      uses: actions/upload-artifact@v4
-      with:
-        name: PlanHub_Scraper_Setup
-        path: |
-          out/**/Setup.exe
-          out/**/PlanHub*.exe
+      # --- 5. Загружаем *.exe в artifacts, чтобы можно было скачать с GitHub UI ---
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: planhub-installer
+          path: |
+            out/**/Setup.exe             # PlanHub Scraper Setup.exe
+            out/**/PlanHub*Installer.exe # одиночный portable-exe, если будет
+          if-no-files-found: error       # падаем, если exe не найден

@@ -2,46 +2,47 @@
 name: Build Windows exe
 
 on:
-  push:               # автоматически на каждый push в любую ветку
-  workflow_dispatch:  # и вручную из вкладки «Actions»
+  push:               # автоматически на каждый push
+  workflow_dispatch:  # и вручную из «Actions»
 
 jobs:
   build-win:
-    runs-on: windows-latest        # Windows Server 2022 (достаточно для Squirrel)
+    runs-on: windows-latest        # Windows Server 2022
 
     steps:
-      # --- 1. Клонируем репозиторий ---
+      # 1. Клонируем репозиторий
       - name: Checkout repo
         uses: actions/checkout@v4
         with:
-          fetch-depth: 1           # полный clone не нужен
+          fetch-depth: 1
 
-      # --- 2. Устанавливаем Node + кэшируем npm ---
+      # 2. Node + npm-cache
       - name: Set up Node 20 (LTS)
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: npm               # кеширует C:\npm\cache
+          cache: npm
 
-      # --- 3. Устанавливаем зависимости ---
-      # npm ci = чистая установка по package-lock.json, быстрее и надёжнее, чем npm i
+      # 3. Устанавливаем зависимости
       - name: Install dependencies
         run: npm ci --ignore-scripts
 
-      # --- 4. Собираем инсталлятор через Electron-Forge ---
-      # if-statement пропускает шаг, когда нет папки makers/squirrel
+      # 4. Сборка installer’а
       - name: Build installer (Electron-Forge make)
         run: npm run make
         env:
-          # GH_TOKEN нужен Squirrel-maker'у для подписи/публикации — встроенный токен подойдёт
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # --- 5. Загружаем *.exe в artifacts, чтобы можно было скачать с GitHub UI ---
+      # 4-bis. Выводим структуру каталога сборки (для отладки)
+      - name: Show build directory
+        run: dir C:\builds\electron /S /B
+
+      # 5. Загружаем exe в artifacts
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
           name: planhub-installer
           path: |
-            out/**/Setup.exe             # PlanHub Scraper Setup.exe
-            out/**/PlanHub*Installer.exe # одиночный portable-exe, если будет
-          if-no-files-found: error       # падаем, если exe не найден
+            C:/builds/electron/**/Setup.exe
+            C:/builds/electron/**/PlanHub*Installer.exe
+          if-no-files-found: error

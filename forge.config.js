@@ -6,20 +6,10 @@ const fs              = require('fs-extra');
 const { FusesPlugin } = require('@electron-forge/plugin-fuses');
 const { FuseV1Options, FuseVersion } = require('@electron/fuses');
 
-/* ---------- конфигурация ---------- */
 module.exports = {
-  /* -------------------------------------------------------------------- */
-  /* 1)  Явно указываем maker-цели (ключевой фикс)                        */
-  /* -------------------------------------------------------------------- */
-  make_targets: {
-    win32: ['@electron-forge/maker-squirrel'],   // ← главное!
-    linux: ['@electron-forge/maker-deb', '@electron-forge/maker-rpm'],
-    darwin: ['@electron-forge/maker-zip']
-  },
-
-  /* -------------------------------------------------------------------- */
-  /* 2)  Packager                                                         */
-  /* -------------------------------------------------------------------- */
+  /* ------------------------------------------------------------------ */
+  /* 1.  Packager                                                       */
+  /* ------------------------------------------------------------------ */
   packagerConfig: {
     prune: false,
     asar : {
@@ -27,6 +17,7 @@ module.exports = {
         'node_modules/{puppeteer,puppeteer-core,puppeteer-extra,' +
         'puppeteer-extra-plugin-*,fs-extra}/**'
     },
+    /* кладём «тяжёлые» зависимости рядом с приложением */
     afterCopy: [
       async (buildPath) => {
         const deps = [
@@ -37,14 +28,16 @@ module.exports = {
           'puppeteer-extra-plugin-recaptcha',
           'fs-extra'
         ];
+
         for (const dep of deps) {
           const src = path.join(__dirname, 'node_modules', dep);
           const dst = path.join(buildPath,  'node_modules', dep);
+
           console.log(`[afterCopy] → ${dep}`);
           await fs.copy(src, dst, {
             recursive: true,
             filter: (p) =>
-              !/[/\\]local-chromium[/\\]/i.test(p) &&
+              !/[/\\]local-chromium[/\\]/i.test(p) &&  // не тащим Chromium
               !/[/\\]\.cache[/\\]/i.test(p)
           });
         }
@@ -53,23 +46,29 @@ module.exports = {
     ]
   },
 
-  /* -------------------------------------------------------------------- */
-  /* 3)  Makers                                                           */
-  /* -------------------------------------------------------------------- */
+  /* ------------------------------------------------------------------ */
+  /* 2.  Makers – только они нужны Forge’у, никаких make_targets!       */
+  /* ------------------------------------------------------------------ */
   makers: [
     {
-      /* Windows-инсталлятор (Squirrel) */
-      name : '@electron-forge/maker-squirrel',
-      config: { name: 'planhub_scraper' }
+      name     : '@electron-forge/maker-squirrel',
+      /* запускаем **только** на Windows-раннере */
+      platforms: ['win32'],
+      config   : {
+        name: 'planhub_scraper',
+        setupIcon:    'assets/icon.ico',
+        setupExe:     'PlanHubScraperSetup.exe',
+        setupMsi:     'PlanHubScraperSetup.msi'
+      }
     },
-    { name: '@electron-forge/maker-zip',  platforms: ['darwin'] },
-    { name: '@electron-forge/maker-deb',  config: {} },
-    { name: '@electron-forge/maker-rpm',  config: {} }
+    { name: '@electron-forge/maker-zip', platforms: ['darwin'] },
+    { name: '@electron-forge/maker-deb', config: {} },
+    { name: '@electron-forge/maker-rpm', config: {} }
   ],
 
-  /* -------------------------------------------------------------------- */
-  /* 4)  Webpack-плагин                                                   */
-  /* -------------------------------------------------------------------- */
+  /* ------------------------------------------------------------------ */
+  /* 3.  Web-pack плагин                                                */
+  /* ------------------------------------------------------------------ */
   plugins: [
     {
       name  : '@electron-forge/plugin-webpack',
@@ -105,7 +104,7 @@ module.exports = {
       }
     },
 
-    /* Fuses-плагин */
+    /* Fuses-плагин без изменений */
     new FusesPlugin({
       version: FuseVersion.V1,
       [FuseV1Options.RunAsNode]                            : false,

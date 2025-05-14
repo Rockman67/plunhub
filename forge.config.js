@@ -8,7 +8,18 @@ const { FuseV1Options, FuseVersion } = require('@electron/fuses');
 
 /* ---------- конфигурация ---------- */
 module.exports = {
-  /* ---------- packager ---------- */
+  /* -------------------------------------------------------------------- */
+  /* 1)  Явно указываем maker-цели (ключевой фикс)                        */
+  /* -------------------------------------------------------------------- */
+  make_targets: {
+    win32: ['@electron-forge/maker-squirrel'],   // ← главное!
+    linux: ['@electron-forge/maker-deb', '@electron-forge/maker-rpm'],
+    darwin: ['@electron-forge/maker-zip']
+  },
+
+  /* -------------------------------------------------------------------- */
+  /* 2)  Packager                                                         */
+  /* -------------------------------------------------------------------- */
   packagerConfig: {
     prune: false,
     asar : {
@@ -42,24 +53,27 @@ module.exports = {
     ]
   },
 
-  /* ---------- makers ---------- */
+  /* -------------------------------------------------------------------- */
+  /* 3)  Makers                                                           */
+  /* -------------------------------------------------------------------- */
   makers: [
     {
       /* Windows-инсталлятор (Squirrel) */
       name : '@electron-forge/maker-squirrel',
       config: { name: 'planhub_scraper' }
     },
-    { name: '@electron-forge/maker-zip', platforms: ['darwin'] },
-    { name: '@electron-forge/maker-deb', config: {} },
-    { name: '@electron-forge/maker-rpm', config: {} }
+    { name: '@electron-forge/maker-zip',  platforms: ['darwin'] },
+    { name: '@electron-forge/maker-deb',  config: {} },
+    { name: '@electron-forge/maker-rpm',  config: {} }
   ],
 
-  /* ---------- plugins ---------- */
+  /* -------------------------------------------------------------------- */
+  /* 4)  Webpack-плагин                                                   */
+  /* -------------------------------------------------------------------- */
   plugins: [
     {
       name  : '@electron-forge/plugin-webpack',
       config: {
-        /* packagerConfig.out НЕ задаём — берём дефолтный out/ */
         mainConfig: path.resolve(__dirname, 'webpack.main.config.js'),
         renderer  : {
           config: path.resolve(__dirname, 'webpack.renderer.config.js'),
@@ -91,6 +105,7 @@ module.exports = {
       }
     },
 
+    /* Fuses-плагин */
     new FusesPlugin({
       version: FuseVersion.V1,
       [FuseV1Options.RunAsNode]                            : false,

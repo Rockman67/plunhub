@@ -17,19 +17,19 @@ jobs:
         with:
           fetch-depth: 1
 
-      # 2 ▸ Node + npm-кеш
+      # 2 ▸ Node + npm-кэш
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: npm
 
-      # 3 ▸ Каталог, куда electron-forge кладёт билд
+      # 3 ▸ Каталог, куда Electron-Forge кладёт билд
       - name: Ensure build directory exists
         shell: pwsh
         run: New-Item -ItemType Directory -Force -Path 'C:\builds\electron'
 
-      # 4 ▸ Установка зависимостей (без post-install-скриптов)
+      # 4 ▸ Установка зависимостей (чисто, без post-install-скриптов)
       - name: Install dependencies (clean)
         run: npm ci --ignore-scripts
 
@@ -50,10 +50,10 @@ jobs:
             Write-Warning '⚠️  C:\builds\electron not found'
           }
 
-      # 7 ▸ Загрузка артефактов, только если каталог не пустой
+      # 7 ▸ Загрузка артефактов
       - name: Upload artefacts
-        if: ${{ hashFiles('C:\\builds\\electron\\**\\*') != '' }}
         uses: actions/upload-artifact@v4
         with:
           name: planhub_build_win
-          path: 'C:\builds\electron'
+          path: 'C:\builds\electron\**\*'
+          if-no-files-found: error

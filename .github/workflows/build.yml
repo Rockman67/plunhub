@@ -24,23 +24,22 @@ jobs:
           node-version: 20
           cache: npm
 
-      # 3 ▸ Папка, куда Electron-packager будет писать (совпадает с forge.config.js)
+      # 3 ▸ Каталог, куда electron-forge кладёт билд
       - name: Ensure build directory exists
         shell: pwsh
-        run: |
-          New-Item -ItemType Directory -Force -Path 'C:\builds\electron'
+        run: New-Item -ItemType Directory -Force -Path 'C:\builds\electron'
 
-      # 4 ▸ Установка зависимостей без запуска post-install-скриптов
+      # 4 ▸ Установка зависимостей (без post-install-скриптов)
       - name: Install dependencies (clean)
         run: npm ci --ignore-scripts
 
-      # 5 ▸ Сборка install-пакета
+      # 5 ▸ Сборка установщика
       - name: Make Windows installer
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: npm run make
 
-      # 6 ▸ Дерево результатов (не ломаем workflow, если каталога нет)
+      # 6 ▸ Показать дерево результатов (не ломаем workflow, если каталога нет)
       - name: Show build folder tree
         shell: pwsh
         continue-on-error: true
@@ -51,9 +50,9 @@ jobs:
             Write-Warning '⚠️  C:\builds\electron not found'
           }
 
-      # 7 ▸ Загрузка артефактов (если каталог существует)
+      # 7 ▸ Загрузка артефактов, только если каталог не пустой
       - name: Upload artefacts
-        if: exists('C:\\builds\\electron')
+        if: ${{ hashFiles('C:\\builds\\electron\\**\\*') != '' }}
         uses: actions/upload-artifact@v4
         with:
           name: planhub_build_win

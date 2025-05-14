@@ -1,48 +1,45 @@
 # .github/workflows/build.yml
-name: Build Windows exe
+name: build-win
 
 on:
-  push:               # автоматически на каждый push
-  workflow_dispatch:  # и вручную из «Actions»
+  push:
+    branches: [ main ]
+  workflow_dispatch:
 
 jobs:
   build-win:
-    runs-on: windows-latest        # Windows Server 2022
+    runs-on: windows-2022
 
     steps:
-      # 1. Клонируем репозиторий
-      - name: Checkout repo
+      - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 1
 
-      # 2. Node + npm-cache
-      - name: Set up Node 20 (LTS)
+      - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: npm
 
-      # 3. Устанавливаем зависимости
-      - name: Install dependencies
+      - name: Install deps (clean)
         run: npm ci --ignore-scripts
 
-      # 4. Сборка installer’а
-      - name: Build installer (Electron-Forge make)
-        run: npm run make
+      - name: Make Windows installer
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npm run make
 
-      # 4-bis. Выводим структуру каталога сборки (для отладки)
-      - name: Show build directory
-        run: dir C:\builds\electron /S /B
+      # ▸▸ вместо cmd/dir используем PowerShell-листинг
+      - name: Show build folder tree
+        shell: pwsh
+        run: |
+          Get-ChildItem 'C:\builds\electron' -Recurse |
+          Select-Object FullName
 
-      # 5. Загружаем exe в artifacts
-      - name: Upload artifacts
+      # ▸▸ выгружаем всё, что появилось в C:\builds\electron
+      - name: Upload artefacts
         uses: actions/upload-artifact@v4
         with:
-          name: planhub-installer
-          path: |
-            C:/builds/electron/**/Setup.exe
-            C:/builds/electron/**/PlanHub*Installer.exe
-          if-no-files-found: error
+          name: planhub_build_win
+          path: C:\builds\electron
